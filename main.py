@@ -14,7 +14,7 @@ app.add_middleware(
 )
 
 # טוען את המודל לזיהוי קול מזויף
-model = pipeline("audio-classification", model="audeering/antispoofing-celeb-v2")
+model = pipeline("audio-classification", model="speechbrain/antispoofing-celeb-v2")
 
 @app.post("/analyze")
 async def analyze(audio: UploadFile = File(...)):
