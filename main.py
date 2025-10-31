@@ -11,7 +11,7 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 # טוענים את המודל עם אימות (חשוב!)
 model = pipeline(
     task="audio-classification",
-    model="speechbrain/antispoofing-celeb-v2",
+model="audeering/antispoofing-celeb-v2"
     use_auth_token=HF_TOKEN,  # זה קו המפתח
 )
 
