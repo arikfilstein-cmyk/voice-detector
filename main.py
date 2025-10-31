@@ -5,7 +5,6 @@ import uvicorn
 
 app = FastAPI()
 
-# מאפשר גישה מכל מקור (כדי שהממשק שלך ב-Lovable יוכל לקרוא)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -13,8 +12,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# טוען את המודל לזיהוי קול מזויף
-model = pipeline("audio-classification", model="speechbrain/antispoofing-celeb-v2")
+@app.on_event("startup")
+def load_model():
+    global model
+    model = pipeline("audio-classification", model="speechbrain/antispoofing-celeb-v2")
 
 @app.post("/analyze")
 async def analyze(audio: UploadFile = File(...)):
