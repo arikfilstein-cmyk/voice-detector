@@ -1,30 +1,27 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from transformers import pipeline
-import os
-import tempfile
+import uvicorn
 
 app = FastAPI()
 
-# קוראים את הטוקן מהסביבה (הכנסת אותו ב-Render תחת HF_TOKEN)
-HF_TOKEN = os.getenv("HF_TOKEN")
-
-# טוענים את המודל עם אימות (חשוב!)
-model = pipeline(
-    task="audio-classification",
-model="audeering/antispoofing-celeb-v2"
-    use_auth_token=HF_TOKEN,  # זה קו המפתח
+# מאפשר גישה מכל מקור (כדי שהממשק שלך ב-Lovable יוכל לקרוא)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
+# טוען את המודל לזיהוי קול מזויף
+model = pipeline("audio-classification", model="audeering/antispoofing-celeb-v2")
+
 @app.post("/analyze")
-async def analyze(file: UploadFile = File(...)):
-    # שומרים זמנית את הקובץ לדיסק
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-        tmp.write(await file.read())
-        tmp_path = tmp.name
+async def analyze(audio: UploadFile = File(...)):
+    result = model(audio.file)
+    label = result[0]['label']
+    score = round(float(result[0]['score']), 3)
+    return {"label": label, "score": score}
 
-    # מריצים חיזוי
-    preds = model(tmp_path)
-
-    # מחזירים תוצאה פשוטה: התווית עם הציון הגבוה ביותר
-    best = max(preds, key=lambda p: p.get("score", 0))
-    return {"label": best.get("label"), "score": float(best.get("score", 0.0))}
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=10000)
