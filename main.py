@@ -2,7 +2,7 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from transformers import pipeline
 import uvicorn
-import io
+import iם
 import soundfile as sf
 
 app = FastAPI()
