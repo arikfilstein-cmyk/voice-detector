@@ -18,24 +18,19 @@ app.add_middleware(
 def load_model():
     global model
     print("⏳ Loading model... please wait.")
+    # מודל ציבורי וקל (ללא Token)
     model = pipeline("audio-classification", model="MIT/ast-finetuned-audioset-10-10-0.4593")
     print("✅ Model loaded successfully!")
 
 @app.post("/analyze")
 async def analyze(audio: UploadFile = File(...)):
     try:
-        # קריאת הקובץ
         audio_bytes = await audio.read()
-        data, samplerate = sf.read(io.BytesIO(audio_bytes))
-
-        # הפעלת המודל
+        # קריאה כדי לוודא שזה אודיו תקין (גם עוזר ללכוד שגיאות פורמט)
+        _data, _sr = sf.read(io.BytesIO(audio_bytes))
+        # הפעלה דרך הפייפליין
         result = model(io.BytesIO(audio_bytes))
-
-        return {
-            "status": "success",
-            "result": result
-        }
-
+        return {"status": "success", "result": result}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
