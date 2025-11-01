@@ -2,8 +2,8 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from transformers import pipeline
 import uvicorn
-import soundfile as sf
 import io
+import soundfile as sf
 
 app = FastAPI()
 
@@ -17,18 +17,25 @@ app.add_middleware(
 @app.on_event("startup")
 def load_model():
     global model
-    print("⏳ Loading model, please wait...")
+    print("⏳ Loading model... please wait.")
     model = pipeline("audio-classification", model="MIT/ast-finetuned-audioset-10-10-0.4593")
     print("✅ Model loaded successfully!")
 
 @app.post("/analyze")
 async def analyze(audio: UploadFile = File(...)):
     try:
-        # קריאת הקובץ מה-upload
-        data, samplerate = sf.read(io.BytesIO(await audio.read()))
-        # ניתוח דרך המודל
-        result = model(audio.file)
-        return {"status": "success", "result": result}
+        # קריאת הקובץ
+        audio_bytes = await audio.read()
+        data, samplerate = sf.read(io.BytesIO(audio_bytes))
+
+        # הפעלת המודל
+        result = model(io.BytesIO(audio_bytes))
+
+        return {
+            "status": "success",
+            "result": result
+        }
+
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
